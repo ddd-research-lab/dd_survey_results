@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DDデッキアンケート 集計結果</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6fa;--bg2:#fff;--bg3:#f0f1f6;
+  --bd:rgba(60,70,120,.1);--bd2:rgba(60,70,120,.22);
+  --gold:#8a6a1a;--gold2:#b8860b;--goldbg:#faf3e0;--goldbd:#e8c84a;
+  --text:#1a1d2e;--text2:#5c6180;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;height:100dvh;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* header */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--bd2);padding:.9rem 2rem .8rem;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06);flex-shrink:0}
+.hdr-in{max-width:1200px;margin:0 auto;display:flex;align-items:flex-end;gap:1.5rem;flex-wrap:wrap}
+.hdr-title{font-family:"Bebas Neue",sans-serif;font-size:1.6rem;letter-spacing:.12em;color:var(--gold2);line-height:1}
+.hdr-sub{font-size:.72rem;color:var(--text2);letter-spacing:.1em;margin-bottom:.2rem}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:.2rem}
+.hdr-badge{background:var(--goldbg);border:1px solid #d4aa50;color:var(--gold);font-size:.75rem;font-weight:700;padding:.25rem .9rem;border-radius:2rem;white-space:nowrap}
+.hdr-period{font-size:.68rem;color:var(--text2);letter-spacing:.04em;white-space:nowrap}
+
+/* nav */
+.nav{background:var(--bg2);border-bottom:1px solid var(--bd);padding:0 2rem;z-index:99;box-shadow:0 1px 3px rgba(0,0,0,.04);flex-shrink:0}
+.nav-in{max-width:1200px;margin:0 auto;display:flex;overflow-x:auto}
+.tab{padding:.55rem 1.3rem;font-size:.82rem;font-family:"Noto Sans JP",sans-serif;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab.on{color:var(--gold2);border-bottom-color:var(--gold2);font-weight:500}
+
+.main{width:100%;max-width:1400px;margin:0 auto;padding:.75rem 1.25rem;flex:1;min-height:0;display:flex;flex-direction:column;box-sizing:border-box}
+.sec{display:none}.sec.on{display:flex;flex:1;min-height:0;flex-direction:column}
+.sec-ttl{font-size:.88rem;font-weight:700;color:var(--gold);margin-bottom:.5rem;padding-bottom:.4rem;border-bottom:2px solid var(--goldbg);display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.sec-ttl::before{content:"";width:4px;height:1em;background:var(--gold2);border-radius:2px;display:inline-block}
+
+/* drill bar */
+.drill{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;background:transparent;border:1px solid transparent;border-radius:10px;padding:.4rem .75rem;min-height:2.2rem;flex-shrink:0;transition:background .2s,border-color .2s}
+.drill.on{background:var(--goldbg);border-color:var(--goldbd)}
+.drill:not(.on) .crumbs,.drill:not(.on) .dinfo,.drill:not(.on) .dreset{visibility:hidden}
+.drill-lbl{font-size:.74rem;color:var(--gold);font-weight:700;white-space:nowrap;display:none}.drill.on .drill-lbl{display:inline}
+.crumbs{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;min-width:0;flex:1}
+.crumb{display:flex;align-items:center;gap:.25rem;background:#fff;border:1px solid var(--goldbd);border-radius:6px;padding:.18rem .55rem;font-size:.76rem}
+.crumb-q{color:var(--text2);font-size:.68rem}
+.crumb-v{color:var(--gold2);font-weight:700;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
+.crumb-x{background:none;border:none;cursor:pointer;color:var(--text2);font-size:.85rem;padding:0 0 0 .2rem;line-height:1}
+.crumb-x:hover{color:#c0392b}
+.dsep{color:var(--text2);opacity:.4;font-size:.85rem}
+.dinfo{font-size:.76rem;color:var(--text2);margin-left:.25rem}
+.dinfo strong{color:var(--gold2)}
+.dreset{margin-left:auto;background:none;border:1px solid var(--bd2);border-radius:6px;padding:.22rem .75rem;font-size:.74rem;font-family:"Noto Sans JP",sans-serif;color:var(--text2);cursor:pointer;white-space:nowrap}
+.dreset:hover{background:var(--bg3)}
+
+/* pie grid */
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:.5rem;flex:1;min-height:0;overflow:hidden}@media(max-width:1000px){.pgrid{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr)}}
+@media(max-width:680px){
+  body{overflow-y:auto;height:auto}
+  .pgrid{grid-template-columns:1fr 1fr;grid-template-rows:none;overflow:visible}
+  .qcard{height:auto}
+  .qcard-body{flex-direction:column;align-items:center}
+  .cwrap{width:130px;height:130px}
+  .legend{width:100%;padding-top:.4rem}
+  .hdr-in{gap:.75rem}
+  .hdr-title{font-size:1.3rem}
+  .hdr-period{display:none}
+  .nav-in{gap:0}
+  .tab{padding:.5rem .9rem;font-size:.76rem}
+  .main{padding:.5rem .75rem}
+  .drill{flex-wrap:wrap;padding:.4rem .5rem}
+  .crumb{max-width:calc(50vw - 2rem)}
+  .crumb-v{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .combo-grid{grid-template-columns:1fr}
+  .combo-wrap{padding:1rem .75rem}
+  .sec-ttl{font-size:.82rem}
+  .cpanel-ttl{font-size:.76rem}
+  .crow-bar-wrap{width:60px}
+}
+.qcard{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:.65rem;transition:box-shadow .2s,border-color .2s;display:flex;flex-direction:column;gap:.35rem;overflow:hidden;height:100%}
+.qcard:hover{box-shadow:0 3px 12px rgba(0,0,0,.08);border-color:var(--bd2)}
+.qcard.act{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(184,134,11,.18);background:#fffcf2}
+.qcard-top{display:flex;align-items:flex-start;gap:.4rem;flex-wrap:wrap}
+.qlbl{font-size:.62rem;letter-spacing:.1em;color:var(--gold);font-weight:700;text-transform:uppercase;flex-shrink:0;margin-top:.1rem}
+.qttl{font-size:.76rem;color:var(--text);line-height:1.35;flex:1;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qnote{font-size:.65rem;color:var(--gold2);font-weight:500;min-height:.8rem}
+.qbadge{display:none;background:var(--goldbg);border:1px solid var(--goldbd);border-radius:1rem;font-size:.62rem;padding:.1rem .45rem;color:var(--gold2);font-weight:700;white-space:nowrap;flex-shrink:0;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+.qbadge.on{display:inline-block}
+.qcard-body{display:flex;align-items:flex-start;gap:.6rem;flex:1;min-height:0}
+.cwrap{position:relative;width:130px;height:130px;flex-shrink:0;cursor:pointer}
+
+.chart-guide{display:flex;align-items:center;gap:.5rem;background:linear-gradient(90deg,#fff8e6,#f5f6fa);border:1px solid var(--goldbd);border-radius:8px;padding:.5rem .9rem;font-size:.78rem;color:var(--text2);flex-shrink:0;margin-bottom:.35rem}
+.chart-guide-icon{font-size:1rem;flex-shrink:0}
+.cwrap canvas{display:block}
+.legend{flex:1;display:flex;flex-direction:column;gap:.22rem;padding-top:.1rem;min-width:0;overflow:hidden}
+.lrow{display:flex;align-items:center;gap:.3rem;font-size:.68rem;cursor:pointer;padding:.08rem .2rem;border-radius:4px;transition:background .12s}
+.lrow:hover{background:var(--bg3);cursor:pointer}.lrow:hover .ldot{transform:scale(1.4)}
+.lrow.sel{background:var(--goldbg)}
+.ldot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.llbl{flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:.68rem}
+.lrow.sel .llbl{color:var(--text);font-weight:600}
+.lpct{font-weight:700;color:var(--text);min-width:2.4rem;text-align:right;font-size:.7rem;flex-shrink:0}
+.ln{color:var(--text2);font-size:.64rem;min-width:2rem;text-align:right;flex-shrink:0}
+
+/* tooltip */
+.tooltip{position:fixed;background:rgba(20,22,36,.88);color:#fff;padding:.4rem .75rem;border-radius:6px;font-size:.78rem;pointer-events:none;display:none;z-index:200;white-space:nowrap;font-family:"Noto Sans JP",sans-serif}
+
+/* combo */
+.cfl{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;padding:1.25rem;background:var(--bg2);border:1px solid var(--bd);border-radius:10px;margin-bottom:1.25rem}
+.fg{display:flex;flex-direction:column;gap:.3rem}
+.fgl{font-size:.7rem;color:var(--text2);font-weight:500}
+.fgs{background:var(--bg3);border:1px solid var(--bd);color:var(--text);padding:.4rem .75rem;border-radius:6px;font-size:.8rem;font-family:"Noto Sans JP",sans-serif;cursor:pointer;min-width:130px}
+.fgs:focus{outline:none;border-color:var(--gold2)}
+.fgr{padding:.4rem 1rem;font-size:.8rem;font-family:"Noto Sans JP",sans-serif;background:var(--bg3);border:1px solid var(--bd2);border-radius:6px;color:var(--text2);cursor:pointer;align-self:flex-end}
+.csm{font-size:.82rem;color:var(--text2);margin-bottom:.75rem}
+.hl{color:var(--gold2);font-weight:700}
+.ctbl{overflow-x:auto;border-radius:10px;border:1px solid var(--bd);background:var(--bg2)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead tr{background:var(--bg3)}
+th{padding:.7rem 1rem;text-align:left;color:var(--gold);font-weight:700;font-size:.72rem;letter-spacing:.07em;white-space:nowrap;border-bottom:1px solid var(--bd2)}
+td{padding:.65rem 1rem;border-bottom:1px solid var(--bd);color:var(--text2);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(180,160,80,.04)}
+.tc{text-align:center}.tr{text-align:right}
+.bw{width:120px}.bb{height:7px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bf{height:100%;background:var(--gold2);border-radius:4px}
+.nores{text-align:center;padding:3rem;color:var(--text2)}
+.tag{display:inline-block;padding:.18rem .55rem;border-radius:4px;font-size:.75rem;font-weight:500}
+.tt{background:#e8eeff;color:#2f54e8;border:1px solid #c5d0f8}
+.ta{background:#f0ebff;color:#6a3dbf;border:1px solid #d5c8f5}
+.tb{background:#e6f7f2;color:#0e8a6e;border:1px solid #b8e4d8}
+.tn{background:#f5f5f5;color:#888;border:1px solid #ddd}
+.ty{background:#eaf7ee;color:#2a8a46;border:1px solid #b8dfc4}
+.tno{background:#fdf0ee;color:#c0392b;border:1px solid #f5c5bc}
+.tk{background:#fff8e6;color:#c27c0a;border:1px solid #f5d98a}
+.tv{background:#fde8f4;color:#b83a7e;border:1px solid #f0b8d8}
+.t1{background:#e6f7f2;color:#0e8a6e;border:1px solid #b8e4d8}
+.t2{background:#e8eeff;color:#2f54e8;border:1px solid #c5d0f8}
+.t3{background:#fff8e6;color:#c27c0a;border:1px solid #f5d98a}
+
+/* combo drill */
+.combo-wrap{background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:1.5rem}
+.combo-bread{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;min-height:2.5rem;padding:.6rem .9rem;background:var(--bg3);border-radius:8px;border:1px solid var(--bd)}
+.combo-bread.active{background:var(--goldbg);border-color:var(--goldbd)}
+.cb-hint{font-size:.8rem;color:var(--text2);font-style:italic}
+.cb-step{display:flex;align-items:center;gap:.35rem}
+.cb-order{width:18px;height:18px;border-radius:50%;background:var(--gold2);color:#fff;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cb-q{font-size:.68rem;color:var(--gold);font-weight:700;letter-spacing:.06em}
+.cb-val{background:#fff;border:1px solid var(--goldbd);border-radius:6px;padding:.2rem .65rem;font-size:.78rem;color:var(--gold2);font-weight:700;cursor:pointer;transition:all .15s}
+.cb-val:hover{background:#faeec0;text-decoration:line-through}
+.cb-arr{color:var(--text2);opacity:.4;font-size:1rem}
+.cb-reset{margin-left:auto;padding:.2rem .75rem;background:none;border:1px solid var(--bd2);border-radius:6px;font-size:.73rem;font-family:"Noto Sans JP",sans-serif;color:var(--text2);cursor:pointer;white-space:nowrap}
+.cb-reset:hover{background:var(--bg3)}
+.cb-total{font-size:.75rem;color:var(--text2);white-space:nowrap}
+.cb-total strong{color:var(--gold2);font-weight:700}
+.combo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem}
+.cpanel{background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:1.1rem 1.1rem .9rem;transition:border-color .2s}
+.cpanel.has-filter{border-color:var(--goldbd);background:var(--goldbg)}
+.cpanel-hdr{display:flex;align-items:center;gap:.5rem;margin-bottom:.9rem}
+.cpanel-q{font-size:.68rem;font-weight:700;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;flex-shrink:0}
+.cpanel-ttl{font-size:.82rem;color:var(--text);font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cpanel-n{font-size:.7rem;color:var(--text2);white-space:nowrap;flex-shrink:0}
+.cpanel-order{width:20px;height:20px;border-radius:50%;background:var(--gold2);color:#fff;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:.25rem}
+.crow{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;column-gap:.55rem;row-gap:.1rem;cursor:pointer;padding:.45rem .55rem;border-radius:7px;border:1.5px solid transparent;transition:all .15s;background:var(--bg2);margin-bottom:.35rem}
+.crow:last-child{margin-bottom:0}
+.crow:hover{border-color:var(--goldbd);background:#fffdf5}
+.crow.sel{border-color:var(--gold2);background:#fffbf0}
+.crow.dim{opacity:.28;pointer-events:none}
+.crow-lbl{grid-column:1;grid-row:1;font-size:.76rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;align-self:end;padding-bottom:.05rem}
+.crow.sel .crow-lbl{font-weight:700;color:var(--gold2)}
+.crow-stat{grid-column:3;grid-row:1;display:flex;align-items:baseline;gap:.3rem;align-self:end}
+.crow-pct{font-size:.8rem;font-weight:700;color:var(--text)}
+.crow-n{font-size:.68rem;color:var(--text2)}
+.crow-bar-wrap{grid-column:1/-1;grid-row:2}
+.crow-bar-bg{height:14px;background:var(--bg3);border-radius:5px;overflow:hidden;position:relative}
+.crow-bar-fg{height:100%;border-radius:5px;transition:width .35s cubic-bezier(.4,0,.2,1);position:relative}
+.crow-bar-val{position:absolute;right:5px;top:50%;transform:translateY(-50%);font-size:.6rem;color:rgba(255,255,255,.9);font-weight:700;line-height:1;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="tooltip" id="tip"></div>
+<div class="hdr">
+  <div class="hdr-in">
+    <div><div class="hdr-sub">DD DECK SURVEY</div><div class="hdr-title">アンケート集計結果</div></div>
+    <div class="hdr-right"><div class="hdr-badge">集計対象 140件</div><div class="hdr-period">集計期間：2026年4月29日 ～ 2026年5月16日</div></div>
+  </div>
+</div>
+<div class="nav">
+  <div class="nav-in">
+    <button class="tab on" data-t="charts">円グラフ</button>
+    <button class="tab" data-t="combo">棒グラフ</button>
+  </div>
+</div>
+<div class="main">
+  <div class="sec on" id="s-charts">
+    <div class="sec-ttl">設問別 集計</div>
+    <div class="chart-guide">
+      <span class="chart-guide-icon">👆</span>
+      <span>円グラフまたは凡例をクリックすると、その回答者だけに絞り込んで他の設問の結果が更新されます</span>
+    </div>
+    <div class="drill" id="drill">
+      <span class="drill-lbl">絞り込み中</span>
+      <div class="crumbs" id="crumbs"></div>
+      <span class="dinfo" id="dinfo"></span>
+      <button class="dreset" id="dreset">すべてリセット</button>
+    </div>
+    <div class="pgrid" id="pgrid"></div>
+  </div>
+  <div class="sec" id="s-combo" style="overflow-y:auto;">
+    <div class="sec-ttl">棒グラフ集計</div>
+    <div class="combo-wrap">
+      <div class="combo-bread" id="cbread">
+        <span class="cb-hint">どの設問からでも回答をクリックして絞り込みできます</span>
+      </div>
+      <div class="combo-grid" id="cgrid"></div>
+    </div>
+  </div>
+</div>
+<script>
+var DATA={"total":140,"questions":[{"id":"Q1","title":"\u30a2\u30d3\u30b9\u3068\u30c8\u30fc\u30de\u30b9\u3069\u3061\u3089\u3092\u63a1\u7528\u3057\u3066\u3044\u307e\u3059\u304b\uff1f","items":[{"label":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","count":70,"pct":50.0},{"label":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","count":42,"pct":30.0},{"label":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","count":27,"pct":19.3},{"label":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","count":1,"pct":0.7}],"free":[]},{"id":"Q2","title":"DD\u30c7\u30a3\u30d5\u30a7\u30f3\u30b9\u30fb\u30bd\u30eb\u30b8\u30e3\u30fc\u3092\u63a1\u7528\u3057\u3066\u3044\u307e\u3059\u304b\uff1f","items":[{"label":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","count":95,"pct":67.9},{"label":"\u63a1\u7528\u3057\u3066\u3044\u308b","count":45,"pct":32.1}],"free":[]},{"id":"Q3","title":"\u6226\u4e59\u5973\u3068\u5e38\u95c7\u3069\u3061\u3089\u3092\u63a1\u7528\u3057\u3066\u3044\u307e\u3059\u304b\uff1f","items":[{"label":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","count":61,"pct":43.6},{"label":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","count":45,"pct":32.1},{"label":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","count":27,"pct":19.3},{"label":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","count":7,"pct":5.0}],"free":[]},{"id":"Q4","title":"DDD\u30d8\u30c3\u30c9\u30cf\u30f3\u30c8\u3092\u63a1\u7528\u3057\u3066\u3044\u307e\u3059\u304b\uff1f","items":[{"label":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","count":80,"pct":57.1},{"label":"\u63a1\u7528\u3057\u3066\u3044\u308b","count":60,"pct":42.9}],"free":[]},{"id":"Q5","title":"DD\u30ab\u30a6\u30f3\u30c8\u30fb\u30b5\u30fc\u30d9\u30a4\u30e4\u30fc\u306f\u4f55\u679a\u63a1\u7528\u3057\u3066\u3044\u307e\u3059\u304b\uff1f","items":[{"label":"\uff11\u679a","count":70,"pct":50.0},{"label":"\uff13\u679a","count":41,"pct":29.3},{"label":"\uff12\u679a","count":29,"pct":20.7}],"free":[]},{"id":"Q6","title":"DD\u30b9\u30b1\u30fc\u30eb\u30fb\u30b5\u30fc\u30d9\u30a4\u30e4\u30fc\u306f\u4f55\u679a\u63a1\u7528\u3057\u3066\u3044\u307e\u3059\u304b\uff1f","items":[{"label":"\uff12\u679a","count":77,"pct":55.0},{"label":"\uff13\u679a","count":39,"pct":27.9},{"label":"\uff11\u679a","count":24,"pct":17.1}],"free":[]},{"id":"Q8","title":"DD\u30c7\u30c3\u30ad\u306e\u4f7f\u7528\u6b74\u3092\u6559\u3048\u3066\u304f\u3060\u3055\u3044","items":[{"label":"\uff10~\uff11\u5e74","count":44,"pct":31.4},{"label":"\uff11~\uff13\u5e74","count":42,"pct":30.0},{"label":"\uff13~\uff15\u5e74","count":25,"pct":17.9},{"label":"\uff15~\uff17\u5e74","count":13,"pct":9.3},{"label":"\uff11\uff10\u5e74\u4ee5\u4e0a","count":10,"pct":7.1},{"label":"\uff17~\uff11\uff10\u5e74","count":6,"pct":4.3}],"free":[]}],"q7_free":[],"combos":[{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":10,"pct":7.1},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":5,"pct":3.6},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":4,"pct":2.9},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":3,"pct":2.1},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":3,"pct":2.1},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":3,"pct":2.1},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":3,"pct":2.1},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":2,"pct":1.4},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":2,"pct":1.4},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":2,"pct":1.4},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":2,"pct":1.4},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":2,"pct":1.4},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":2,"pct":1.4},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":2,"pct":1.4},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":2,"pct":1.4},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":2,"pct":1.4},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":2,"pct":1.4},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":2,"pct":1.4},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff13\u679a","count":2,"pct":1.4},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","count":2,"pct":1.4},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","count":2,"pct":1.4},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":2,"pct":1.4},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":2,"pct":1.4},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":2,"pct":1.4},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","count":1,"pct":0.7},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","count":1,"pct":0.7}],"rows":[{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff17~\uff11\uff10\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff11\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff11\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff11\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","Q8":"\uff17~\uff11\uff10\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff13\u679a","Q8":"\uff17~\uff11\uff10\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff17~\uff11\uff10\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff17~\uff11\uff10\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff11\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff11\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff11\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff11\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff11\u679a","Q8":"\uff17~\uff11\uff10\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff13\u679a","Q8":"\uff13~\uff15\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff15~\uff17\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff13\u679a","Q6":"\uff12\u679a","Q8":"\uff11\uff10\u5e74\u4ee5\u4e0a"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff11\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u6226\u4e59\u5973\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff12\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DD\u9b54\u5c0e\u8ce2\u8005\u30c8\u30fc\u30de\u30b9","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q2":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q3":"\u3069\u3061\u3089\u3082\u63a1\u7528\u3057\u3066\u3044\u308b","Q4":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q5":"\uff11\u679a","Q6":"\uff13\u679a","Q8":"\uff11~\uff13\u5e74"},{"Q1":"DDD\u58ca\u8599\u738b\u30a2\u30d3\u30b9\u30fb\u30e9\u30b0\u30ca\u30ed\u30af","Q2":"\u63a1\u7528\u3057\u3066\u3044\u306a\u3044","Q3":"\u5e38\u95c7\u306e\u5951\u7d04\u66f8","Q4":"\u63a1\u7528\u3057\u3066\u3044\u308b","Q5":"\uff11\u679a","Q6":"\uff12\u679a","Q8":"\uff10~\uff11\u5e74"}]};
+var PAL=['#0055ff','#00c060','#ff8800','#ff1a1a','#9922ee','#ff0080','#00b8c8','#ff5500'];
+var QS=['Q1','Q2','Q3','Q4','Q5','Q6','Q8'];
+var DF={};
+
+// ── DONUT CHART (pure Canvas 2D) ──
+var LABEL_MAP={
+  'DD魔導賢者トーマス':'トーマス',
+  'DDD壊薩王アビス・ラグナロク':'アビス',
+  'どちらも採用している':'両方',
+  'どちらも採用していない':'両方なし',
+  '採用している':'採用',
+  '採用していない':'非採用',
+  '常闇の契約書':'常闇',
+  '戦乙女の契約書':'戦乙女',
+  '１枚':'1枚','２枚':'2枚','３枚':'3枚',
+  '０～１年':'0−1年',
+  '１～３年':'1−3年',
+  '３～５年':'3−5年',
+  '５～７年':'5−7年',
+  '７～１０年':'7−10年',
+  '１０年以上':'10年上'
+};
+function shortLabel(s){
+  if(LABEL_MAP[s]) return LABEL_MAP[s];
+  var out='',len=0;
+  for(var i=0;i<s.length;i++){
+    var c=s.charCodeAt(i);
+    var w=(c>127)?2:1;
+    if(len+w>8) break;
+    out+=s[i]; len+=w;
+  }
+  return out+(out.length<s.length?'…':'');
+}
+
+function drawDonut(canvas,items,selVal,hovIdx){
+  var W=130;
+  canvas.style.width=W+'px'; canvas.style.height=W+'px';
+  var scale=window.devicePixelRatio||1;
+  var WP=Math.floor(W*scale);
+  var R=Math.floor(W*0.448),r=Math.floor(W*0.276),cx=Math.floor(W/2),cy=Math.floor(W/2);
+  canvas.width=WP; canvas.height=WP;
+  var ctx=canvas.getContext('2d');
+  ctx.scale(scale,scale);
+  ctx.clearRect(0,0,W,W);
+  var total=items.reduce(function(s,it){return s+it.count;},0);
+  var angle=-Math.PI/2;
+  items.forEach(function(it,i){
+    var sweep=2*Math.PI*(it.count/total);
+    var dimmed=(selVal && selVal!==it.label);
+    var isHov=(hovIdx===i);
+    var push=isHov?4:0;
+    var mid=angle+sweep/2;
+    var ox=push*Math.cos(mid), oy=push*Math.sin(mid);
+    ctx.beginPath();
+    ctx.moveTo(cx+ox+(R)*Math.cos(angle),cy+oy+(R)*Math.sin(angle));
+    ctx.arc(cx+ox,cy+oy,R,angle,angle+sweep);
+    ctx.arc(cx+ox,cy+oy,r,angle+sweep,angle,true);
+    ctx.closePath();
+    ctx.fillStyle=PAL[i%PAL.length]+(dimmed?'44':'');
+    ctx.fill();
+    ctx.strokeStyle='#fff';
+    ctx.lineWidth=isHov?3:2;
+    ctx.stroke();
+    it._start=angle; it._end=angle+sweep;
+    angle+=sweep;
+  });
+  // draw labels on segments
+  var midR=(R+r)/2;
+  function drawOutlinedText(ctx,txt,tx,ty,fontSize,bold){
+    ctx.font=(bold?'bold ':'')+fontSize+'px "Noto Sans JP",sans-serif';
+    ctx.lineWidth=2.5;
+    ctx.lineJoin='round';
+    ctx.strokeStyle='rgba(0,0,0,0.82)';
+    ctx.strokeText(txt,tx,ty);
+    ctx.fillStyle='#fff';
+    ctx.fillText(txt,tx,ty);
+  }
+  items.forEach(function(it,i){
+    var sweep=it._end-it._start;
+    if(sweep<0.18) return;
+    var dimmed=(selVal && selVal!==it.label);
+    var mid=it._start+sweep/2;
+    var tx=cx+midR*Math.cos(mid);
+    var ty=cy+midR*Math.sin(mid);
+    ctx.save();
+    ctx.globalAlpha=dimmed?0.35:1;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    if(sweep>=0.45){
+      drawOutlinedText(ctx,it.pct+'%',tx,ty-5,9,true);
+      drawOutlinedText(ctx,shortLabel(it.label),tx,ty+6,7,false);
+    } else if(sweep>=0.28){
+      drawOutlinedText(ctx,it.pct+'%',tx,ty,9,true);
+    } else {
+      drawOutlinedText(ctx,it.pct+'%',tx,ty,8,true);
+    }
+    ctx.restore();
+  });
+}
+
+function normalizeAng(a){
+  var pi2=2*Math.PI;
+  return ((a%pi2)+pi2)%pi2;
+}
+function getSegment(canvas,items,mx,my){
+  var rect=canvas.getBoundingClientRect();
+  // CSS pixel coordinates (drawing also uses CSS pixels via ctx.scale)
+  var W=130;
+  var cx=W/2,cy=W/2,R=W*0.448,r=W*0.276;
+  var x=mx-rect.left;
+  var y=my-rect.top;
+  var dx=x-cx,dy=y-cy,dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<r||dist>R) return -1;
+  var ang=normalizeAng(Math.atan2(dy,dx));
+  for(var i=0;i<items.length;i++){
+    var s=normalizeAng(items[i]._start);
+    var e=normalizeAng(items[i]._end);
+    if(Math.abs(items[i]._end-items[i]._start)>=2*Math.PI-0.001) return i; // full circle
+    if(s<=e){
+      if(ang>=s&&ang<=e) return i;
+    } else {
+      // wraps past 2π
+      if(ang>=s||ang<=e) return i;
+    }
+  }
+  return -1;
+}
+
+// ── DATA HELPERS ──
+// DF: {Q1: '採用していない', Q3: '常闇の契約書', ...}
+// rowsExcept: 自分以外のフィルター全適用
+function rowsExcept(excludeQid){
+  return DATA.rows.filter(function(row){
+    for(var i=0;i<QS.length;i++){
+      var q=QS[i];
+      if(q===excludeQid) continue;
+      if(DF[q]!==undefined&&row[q]!==DF[q]) return false;
+    }
+    return true;
+  });
+}
+function allFiltered(){
+  return DATA.rows.filter(function(row){
+    for(var i=0;i<QS.length;i++){
+      var q=QS[i];
+      if(DF[q]!==undefined&&row[q]!==DF[q]) return false;
+    }
+    return true;
+  });
+}
+function calcItems(rows,col){
+  var c={},total=rows.length;
+  rows.forEach(function(r){c[r[col]]=(c[r[col]]||0)+1;});
+  return Object.keys(c).sort(function(a,b){return c[b]-c[a];}).map(function(k){
+    return{label:k,count:c[k],pct:Math.round(c[k]/total*1000)/10,_start:0,_end:0};
+  });
+}
+
+
+// ── CARD BUILDING ──
+var cardItems={};
+function buildCard(q){
+  var d=document.createElement('div');
+  d.className='qcard'; d.id='c-'+q.id;
+  d.innerHTML=
+    '<div class="qcard-top">'+
+      '<span class="qlbl">'+q.id+'</span>'+
+      '<span class="qttl" title="'+q.title+'">'+q.title+'</span>'+
+      '<span class="qbadge" id="b-'+q.id+'"></span>'+
+    '</div>'+
+    '<div class="qcard-body">'+
+      '<div class="cwrap"><canvas id="cv-'+q.id+'"></canvas></div>'+
+      '<div class="legend" id="lg-'+q.id+'"></div>'+
+    '</div>'+
+    '<div class="qnote" id="n-'+q.id+'"></div>';
+  return d;
+}
+
+var tip=document.getElementById('tip');
+function showTip(e,txt){tip.style.display='block';tip.textContent=txt;tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY-30)+'px';}
+function hideTip(){tip.style.display='none';}
+
+function renderCard(qid,items){
+  cardItems[qid]=items;
+  var canvas=document.getElementById('cv-'+qid);
+  if(!canvas) return;
+  var selVal=DF[qid];
+  var hovIdx=-1;
+  drawDonut(canvas,items,selVal,hovIdx);
+
+  // hover
+  canvas.onmousemove=function(e){
+    var idx=getSegment(canvas,items,e.clientX,e.clientY);
+    canvas.style.cursor=idx>=0?'pointer':'default';
+    if(idx!==hovIdx){
+      hovIdx=idx;
+      drawDonut(canvas,items,selVal,hovIdx);
+    }
+    if(idx<0){hideTip();return;}
+    showTip(e,items[idx].label+': '+items[idx].count+'件 ('+items[idx].pct+'%)');
+  };
+  canvas.onmouseleave=function(){
+    hideTip();
+    if(hovIdx!==-1){hovIdx=-1;drawDonut(canvas,items,selVal,hovIdx);}
+  };
+  canvas.onclick=function(e){
+    var idx=getSegment(canvas,items,e.clientX,e.clientY);
+    if(idx>=0) handleClick(qid,items[idx].label);
+  };
+  canvas.addEventListener('touchend',function(e){
+    e.preventDefault();
+    var t=e.changedTouches[0];
+    var idx=getSegment(canvas,items,t.clientX,t.clientY);
+    if(idx>=0) handleClick(qid,items[idx].label);
+  },{passive:false});
+
+  // legend
+  var lg=document.getElementById('lg-'+qid);
+  if(!lg) return;
+  lg.innerHTML='';
+  items.forEach(function(it,i){
+    var row=document.createElement('div');
+    row.className='lrow'+(selVal===it.label?' sel':'');
+    row.innerHTML='<div class="ldot" style="background:'+PAL[i%PAL.length]+'"></div>'+
+      '<div class="llbl">'+it.label+'</div>'+
+      '<div class="lpct">'+it.pct+'%</div>'+
+      '<div class="ln">'+it.count+'件</div>';
+    (function(v){row.onclick=function(){handleClick(qid,v);};})(it.label);
+    lg.appendChild(row);
+  });
+}
+
+function updateMeta(qid,rowCount){
+  var note=document.getElementById('n-'+qid);
+  var badge=document.getElementById('b-'+qid);
+  var card=document.getElementById('c-'+qid);
+  var hasOtherFilter=QS.some(function(q){return q!==qid&&DF[q]!==undefined;});
+  if(note) note.textContent=hasOtherFilter?'対象: '+rowCount+'件':'';
+  if(badge){
+    if(DF[qid]){badge.textContent=DF[qid];badge.classList.add('on');}
+    else badge.classList.remove('on');
+  }
+  if(card) card.classList.toggle('act',!!DF[qid]);
+}
+
+function handleClick(qid,val){
+  var prev=DF[qid];
+  // toggle: clear if same value, set if different
+  delete DF[qid];
+  if(prev!==val) DF[qid]=val;
+  // 全カードを再描画（自分以外のフィルターを適用した母集団で）
+  QS.forEach(function(q,i){
+    var rows=rowsExcept(q);
+    var items=calcItems(rows,q);
+    renderCard(q,items);
+    updateMeta(q,rows.length);
+  });
+  updateDrill();
+}
+
+function updateDrill(){
+  var bar=document.getElementById('drill');
+  var crumbs=document.getElementById('crumbs');
+  var dinfo=document.getElementById('dinfo');
+  var keys=QS.filter(function(q){return DF[q]!==undefined;});
+  if(!keys.length){bar.classList.remove('on');return;}
+  bar.classList.add('on');
+  crumbs.innerHTML='';
+  keys.forEach(function(qid,i){
+    if(i>0){var sep=document.createElement('span');sep.className='dsep';sep.textContent='›';crumbs.appendChild(sep);}
+    var c=document.createElement('div'); c.className='crumb';
+    c.innerHTML='<span class="crumb-q">'+qid+'</span><span class="crumb-v">'+DF[qid]+'</span><button class="crumb-x">×</button>';
+    (function(q){c.querySelector('.crumb-x').onclick=function(){
+      delete DF[q];
+      QS.forEach(function(qq){
+        var rr=rowsExcept(qq),it=calcItems(rr,qq);
+        renderCard(qq,it); updateMeta(qq,rr.length);
+      });
+      updateDrill();
+    };})(qid);
+    crumbs.appendChild(c);
+  });
+  dinfo.innerHTML='該当 <strong>'+allFiltered().length+'</strong> 件';
+}
+
+document.getElementById('dreset').onclick=function(){
+  QS.forEach(function(q){delete DF[q];});
+  QS.forEach(function(q,i){
+    var rows=rowsExcept(q),items=calcItems(rows,q);
+    renderCard(q,items); updateMeta(q,rows.length);
+  });
+  updateDrill();
+};
+
+// ── INIT CHARTS ──
+var pgrid=document.getElementById('pgrid');
+DATA.questions.forEach(function(q,i){
+  pgrid.appendChild(buildCard(q));
+  var rows=rowsExcept(q.id); // 初期は全行（フィルターなし）
+  var items=calcItems(rows,q.id);
+  renderCard(q.id,items); updateMeta(q.id,rows.length);
+});
+
+// ── TABS ──
+document.querySelectorAll('.tab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
+    document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('on');});
+    btn.classList.add('on');
+    document.getElementById('s-'+btn.dataset.t).classList.add('on');
+  });
+});
+
+// ── COMBO (free-order drill) ──
+var COMBO_QS=[
+  {id:'Q1',title:'アビスとトーマスどちらを採用していますか？'},
+  {id:'Q2',title:'DDディフェンス・ソルジャーを採用していますか？'},
+  {id:'Q3',title:'戦乙女と常闇どちらを採用していますか？'},
+  {id:'Q4',title:'DDDヘッドハントを採用していますか？'},
+  {id:'Q5',title:'DDカウント・サーベイヤーは何枚採用していますか？'},
+  {id:'Q6',title:'DDスケール・サーベイヤーは何枚採用していますか？'},
+  {id:'Q8',title:'DDデッキの使用歴を教えてください'}
+];
+var CPal=['#0055ff','#00c060','#ff8800','#ff1a1a','#9922ee','#ff0080','#00b8c8','#ff5500'];
+
+// Filter state: ordered array of {qid, val}
+var comboFilters=[];
+
+function getFilteredRows(excludeQid){
+  return DATA.rows.filter(function(row){
+    for(var i=0;i<comboFilters.length;i++){
+      var f=comboFilters[i];
+      if(f.qid===excludeQid) continue;
+      if(row[f.qid]!==f.val) return false;
+    }
+    return true;
+  });
+}
+
+function calcDist(rows,qid){
+  var c={},total=rows.length;
+  rows.forEach(function(r){c[r[qid]]=(c[r[qid]]||0)+1;});
+  return Object.keys(c).sort(function(a,b){return c[b]-c[a];}).map(function(k){
+    return{label:k,count:c[k],pct:Math.round(c[k]/total*1000)/10};
+  });
+}
+
+function getFilter(qid){
+  for(var i=0;i<comboFilters.length;i++){
+    if(comboFilters[i].qid===qid) return comboFilters[i].val;
+  }
+  return undefined;
+}
+function getFilterOrder(qid){
+  for(var i=0;i<comboFilters.length;i++){
+    if(comboFilters[i].qid===qid) return i+1;
+  }
+  return -1;
+}
+
+function handleComboClick(qid,val){
+  var existing=getFilter(qid);
+  // Remove this qid's filter if present
+  comboFilters=comboFilters.filter(function(f){return f.qid!==qid;});
+  // Add new filter unless toggling off (same value clicked)
+  if(existing!==val){
+    comboFilters.push({qid:qid,val:val});
+  }
+  renderComboAll();
+}
+
+function renderComboAll(){
+  renderBreadcrumb();
+  COMBO_QS.forEach(function(q){renderPanel(q);});
+}
+
+function renderBreadcrumb(){
+  var bread=document.getElementById('cbread');
+  if(!comboFilters.length){
+    bread.className='combo-bread';
+    bread.innerHTML='<span class="cb-hint">どの設問からでも回答をクリックして絞り込みできます</span>';
+    return;
+  }
+  bread.className='combo-bread active';
+  var totalMatched=getFilteredRows(null).length;
+  var html='';
+  comboFilters.forEach(function(f,i){
+    if(i>0) html+='<span class="cb-arr">›</span>';
+    html+='<div class="cb-step">'+
+      '<div class="cb-order">'+(i+1)+'</div>'+
+      '<span class="cb-q">'+f.qid+'</span>'+
+      '<span class="cb-val" data-qid="'+f.qid+'">'+f.val+'</span>'+
+      '</div>';
+  });
+  html+='<span class="cb-total">該当 <strong>'+totalMatched+'</strong> 件</span>';
+  html+='<button class="cb-reset" id="cb-rst">リセット</button>';
+  bread.innerHTML=html;
+  bread.querySelectorAll('.cb-val').forEach(function(el){
+    el.addEventListener('click',function(){
+      var qid=this.dataset.qid;
+      comboFilters=comboFilters.filter(function(f){return f.qid!==qid;});
+      renderComboAll();
+    });
+  });
+  var rst=document.getElementById('cb-rst');
+  if(rst) rst.addEventListener('click',function(){comboFilters=[];renderComboAll();});
+}
+
+function renderPanel(q){
+  var panel=document.getElementById('cpanel-'+q.id);
+  if(!panel) return;
+  var selVal=getFilter(q.id);
+  var order=getFilterOrder(q.id);
+  var rows=getFilteredRows(q.id);
+  var items=calcDist(rows,q.id);
+  var maxC=items.length?items[0].count:1;
+
+  panel.className='cpanel'+(selVal?' has-filter':'');
+
+  // header
+  var hdr=panel.querySelector('.cpanel-hdr');
+  var orderBadge=order>0?'<div class="cpanel-order">'+order+'</div>':'';
+  hdr.innerHTML='<span class="cpanel-q">'+q.id+'</span>'+
+    '<span class="cpanel-ttl" title="'+q.title+'">'+q.title+'</span>'+
+    '<span class="cpanel-n">'+rows.length+'件</span>'+
+    orderBadge;
+
+  // rows
+  var rowsEl=panel.querySelector('.cpanel-rows');
+  rowsEl.innerHTML='';
+  items.forEach(function(it,i){
+    var isSel=selVal===it.label;
+    var isDim=selVal&&!isSel;
+    var row=document.createElement('div');
+    row.className='crow'+(isSel?' sel':'')+(isDim?' dim':'');
+    var color=CPal[i%CPal.length];
+    var barW=Math.round(it.count/maxC*1000)/10;
+    var showVal=barW>15?it.count+'件':'';
+    row.innerHTML=
+      '<div class="crow-lbl" title="'+it.label+'">'+it.label+'</div>'+
+      '<div class="crow-stat"><span class="crow-pct">'+it.pct+'%</span><span class="crow-n">'+it.count+'件</span></div>'+
+      '<div class="crow-bar-wrap"><div class="crow-bar-bg">'+
+        '<div class="crow-bar-fg" style="width:'+barW+'%;background:'+color+(isDim?'33':'cc')+'">'+
+          '<span class="crow-bar-val">'+showVal+'</span>'+
+        '</div>'+
+      '</div></div>';
+    (function(val,qid){
+      row.addEventListener('click',function(){handleComboClick(qid,val);});
+    })(it.label,q.id);
+    rowsEl.appendChild(row);
+  });
+}
+
+// Build panels
+(function(){
+  var grid=document.getElementById('cgrid');
+  if(!grid) return;
+  COMBO_QS.forEach(function(q){
+    var panel=document.createElement('div');
+    panel.className='cpanel'; panel.id='cpanel-'+q.id;
+    panel.innerHTML=
+      '<div class="cpanel-hdr"></div>'+
+      '<div class="cpanel-rows"></div>';
+    grid.appendChild(panel);
+  });
+  renderComboAll();
+})();
+
+</script>
+</body>
+</html>
